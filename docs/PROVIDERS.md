@@ -55,6 +55,7 @@ AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
 ATLASCLOUD_API_KEY=          # Atlas Cloud image/video gateway
+APIMART_API_KEY=             # APIMart gateway: Kling v3, Kling v3 Omni, Veo 3.1 video
 
 # KLING OFFICIAL DIRECT API
 KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
@@ -1421,6 +1422,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
+| **APIMart** | `APIMART_API_KEY` | `apimart_video` (Kling v3, Kling v3 Omni, Veo 3.1) | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |
