@@ -26,7 +26,7 @@ from tools.base_tool import (
     ToolTier,
 )
 
-_DEFAULT_MODEL = "kling-v3"
+_DEFAULT_MODEL = "gemini-omni-1.1-flash-ext"
 _OPERATIONS = ("text_to_video", "image_to_video", "reference_to_video", "video_edit")
 _T2V, _I2V, _REF, _EDIT = _OPERATIONS
 
@@ -117,6 +117,13 @@ VIDEO_MODELS: dict[str, dict[str, Any]] = {
     "gemini-omni-1.1-flash": _spec("gemini_omni", _OPERATIONS, ("360p", "720p", "1080p", "4k"), ("16:9", "9:16"),
                                    max_images=10, limits={"videos": 1},
                                    optional=("extend_from_task_id", "metadata")),
+    # Distinct "-ext" schema: fixed durations, 1 first frame or 1/3 references, optional motion video.
+    "gemini-omni-1.1-flash-ext": _spec("omni_ext", (_T2V, _I2V, _REF), ("360p", "720p", "1080p", "4k"), ("16:9", "9:16"),
+                                       durations=(4, 6, 8, 10), default_duration=6, max_images=3,
+                                       limits={"videos": 1}),
+    "grok-imagine-1.5-video-ext": _spec("grok", (_T2V, _I2V, _REF), ("480p", "720p"), ("16:9", "9:16", "1:1", "3:2", "2:3"),
+                                        durations=tuple(range(6, 16)), default_duration=6, ratio_key="size",
+                                        max_images=7),
 }
 
 
@@ -174,6 +181,7 @@ class ApimartVideo(BaseTool):
         "Veo 3.1 fast/quality/lite with first-last frame and reference images up to 4K",
         "Kling v3 and Kling v3 Omni (multi-shot, subjects, video edit) up to 4K",
         "Seedance 2.0/2.5 mixed image, video, and audio references; Gemini Omni 1.1 Flash edits",
+        "Gemini Omni 1.1 Flash ext UGC clips and Grok Imagine 1.5 voiceover-style video",
     ]
     not_good_for = ["offline generation", "local reference video or audio files (APIMart only hosts images)"]
     fallback_tools = ["atlas_video", "kling_video", "veo_video", "seedance_video"]
@@ -376,6 +384,25 @@ class ApimartVideo(BaseTool):
                 payload["image_urls"] = images
             if video or videos:
                 payload["video_urls"] = [video] if video else videos
+        elif family == "omni_ext":
+            if last:
+                raise ValueError(f"{model} has no last-frame mode")
+            if first and images:
+                raise ValueError(f"{model} cannot combine a first frame with reference images")
+            if first:
+                payload.update(image_urls=[first], generation_type="frame")
+            elif images:
+                if len(images) not in (1, 3):
+                    raise ValueError(f"{model} reference mode takes 1 or 3 images (got {len(images)})")
+                payload.update(image_urls=images, generation_type="reference")
+            if videos:
+                payload["video_urls"] = videos
+                payload.pop("duration", None)  # API rejects duration alongside a reference video
+        elif family == "grok":
+            if last:
+                raise ValueError(f"{model} has no last-frame mode")
+            if first or images:
+                payload["image_urls"] = [*([first] if first else []), *images]
 
         audio_key = _AUDIO_KEYS.get(family)
         audio = inputs.get("generate_audio", inputs.get("audio"))

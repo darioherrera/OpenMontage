@@ -111,8 +111,14 @@ def test_requested_families_cataloged():
     assert {
         "sora-2", "sora-2-pro", "veo3.1-fast", "veo3.1-quality", "veo3.1-lite", "kling-v3",
         "kling-v3-omni", "seedance-2.0", "seedance-2.5", "gemini-omni-1.1-flash",
+        "gemini-omni-1.1-flash-ext", "grok-imagine-1.5-video-ext",
     } <= set(VIDEO_MODELS)
-    assert {"flux-2-pro", "flux-2-max", "flux-kontext-pro"} <= set(IMAGE_MODELS)
+    assert {"gpt-image-2-ext", "nano-banana-pro-ext", "flux-2-pro", "flux-2-max", "flux-kontext-pro"} <= set(IMAGE_MODELS)
+
+
+def test_workspace_default_models():
+    assert ApimartVideo.input_schema["properties"]["model"]["default"] == "gemini-omni-1.1-flash-ext"
+    assert ApimartImage.input_schema["properties"]["model"]["default"] == "gpt-image-2-ext"
 
 
 # ------------------------------------------------------------------ video payloads
@@ -299,10 +305,11 @@ class TestExecute:
 class TestKlingVeoCompat:
     def test_cost_estimate_uses_published_rates(self):
         tool = ApimartVideo()
-        assert tool.estimate_cost({"prompt": "x", "duration": 5}) == pytest.approx(0.336)
-        assert tool.estimate_cost({"prompt": "x", "duration": 10, "mode": "pro"}) == pytest.approx(0.896)
-        assert tool.estimate_cost({"prompt": "x", "duration": 10, "resolution": "1080p"}) == pytest.approx(0.896)
-        assert tool.estimate_cost({"prompt": "x", "duration": 10, "mode": "pro", "audio": True}) == pytest.approx(1.12)
+        kling = {"prompt": "x", "model": "kling-v3"}
+        assert tool.estimate_cost({**kling, "duration": 5}) == pytest.approx(0.336)
+        assert tool.estimate_cost({**kling, "duration": 10, "mode": "pro"}) == pytest.approx(0.896)
+        assert tool.estimate_cost({**kling, "duration": 10, "resolution": "1080p"}) == pytest.approx(0.896)
+        assert tool.estimate_cost({**kling, "duration": 10, "mode": "pro", "audio": True}) == pytest.approx(1.12)
         # Veo is fixed at 8 seconds regardless of the duration hint.
         assert tool.estimate_cost({"prompt": "x", "model": "veo3.1-fast", "duration": 5}) == pytest.approx(1.2)
         assert tool.estimate_cost({"prompt": "x", "model": "sora-2", "duration": 8}) == 0.0
@@ -334,3 +341,70 @@ class TestKlingVeoCompat:
 
         monkeypatch.setenv("APIMART_API_KEY", "sk-test")
         assert "apimart_video" in [tool.name for tool in VideoSelector()._providers()]
+
+
+# ------------------------------------------------------------------ workspace preferred "-ext" models
+
+class TestExtModels:
+    def test_omni_ext_frame_reference_and_motion_video(self):
+        tool = ApimartVideo()
+        frame = tool._build_payload(
+            {"prompt": "p", "operation": "image_to_video", "image_url": "https://x/a.png", "aspect_ratio": "9:16"},
+            "gemini-omni-1.1-flash-ext",
+        )
+        assert frame == {
+            "model": "gemini-omni-1.1-flash-ext", "prompt": "p", "duration": 6, "aspect_ratio": "9:16",
+            "resolution": "720p", "image_urls": ["https://x/a.png"], "generation_type": "frame",
+        }
+        refs = tool._build_payload(
+            {"prompt": "p", "operation": "reference_to_video", "reference_images": ["https://x/1.png", "https://x/2.png", "https://x/3.png"],
+             "reference_videos": ["https://x/m.mp4"]},
+            "gemini-omni-1.1-flash-ext",
+        )
+        assert refs["generation_type"] == "reference"
+        assert refs["video_urls"] == ["https://x/m.mp4"]
+        assert "duration" not in refs
+
+    def test_omni_ext_rejects_unsupported_shapes(self):
+        tool = ApimartVideo()
+        with pytest.raises(ValueError, match="1 or 3"):
+            tool._build_payload({"prompt": "p", "reference_images": ["https://x/1.png", "https://x/2.png"]}, "gemini-omni-1.1-flash-ext")
+        with pytest.raises(ValueError, match="duration"):
+            tool._build_payload({"prompt": "p", "duration": 5}, "gemini-omni-1.1-flash-ext")
+        with pytest.raises(ValueError, match="at most 3 images"):
+            tool._build_payload(
+                {"prompt": "p", "image_url": "https://x/a.png", "last_image_url": "https://x/b.png",
+                 "reference_images": ["https://x/1.png", "https://x/2.png"]},
+                "gemini-omni-1.1-flash-ext",
+            )
+
+    def test_grok_uses_size_and_image_urls(self):
+        payload = ApimartVideo()._build_payload(
+            {"prompt": "p", "operation": "image_to_video", "duration": 10, "resolution": "480p",
+             "aspect_ratio": "2:3", "image_url": "https://x/a.png"},
+            "grok-imagine-1.5-video-ext",
+        )
+        assert payload == {
+            "model": "grok-imagine-1.5-video-ext", "prompt": "p", "duration": 10, "size": "2:3",
+            "resolution": "480p", "image_urls": ["https://x/a.png"],
+        }
+        with pytest.raises(ValueError, match="duration"):
+            ApimartVideo()._build_payload({"prompt": "p", "duration": 5}, "grok-imagine-1.5-video-ext")
+
+    def test_gpt_image_2_ext_ratio_snap_and_tier(self):
+        payload = ApimartImage()._build_payload(
+            {"prompt": "p", "width": 3000, "height": 1000, "resolution": "2K"}, "gpt-image-2-ext"
+        )
+        assert payload == {"model": "gpt-image-2-ext", "prompt": "p", "size": "3:1", "resolution": "2k"}
+
+    def test_nano_banana_pro_ext_tier_and_refs(self):
+        payload = ApimartImage()._build_payload(
+            {"prompt": "p", "aspect_ratio": "4:5", "resolution": "4k", "image_urls": ["https://x/a.png"]},
+            "nano-banana-pro-ext",
+        )
+        assert payload == {
+            "model": "nano-banana-pro-ext", "prompt": "p", "size": "4:5", "resolution": "4K",
+            "image_urls": ["https://x/a.png"],
+        }
+        with pytest.raises(ValueError, match="aspect_ratio"):
+            ApimartImage()._build_payload({"prompt": "p", "aspect_ratio": "9:21"}, "nano-banana-pro-ext")

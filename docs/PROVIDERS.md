@@ -447,7 +447,10 @@ One key and one async task API (`/v1/videos/generations`, `/v1/images/generation
 | Veo 3.1 | `veo3.1-fast`, `veo3.1-quality`, `veo3.1-lite` | text/image (first-last frame) to video; reference images (fast) |
 | Kling v3 | `kling-v3`, `kling-v3-omni` | text/image to video; Omni adds references and video edit |
 | Seedance | `seedance-2.0`, `seedance-2.0-fast`, `seedance-2.0-mini`, `seedance-2.5` | text/image/reference to video; 2.5 adds video edit |
-| Gemini Omni | `gemini-omni-1.1-flash` | text/image/reference to video; video edit |
+| Gemini Omni | `gemini-omni-1.1-flash`, `gemini-omni-1.1-flash-ext` (default) | text/image/reference to video; video edit (non-ext) |
+| Grok Imagine | `grok-imagine-1.5-video-ext` | text/image/reference to video |
+| GPT Image 2 | `gpt-image-2-ext` (default) | text to image; edit |
+| Nano Banana Pro | `nano-banana-pro-ext` | text to image; edit |
 | FLUX | `flux-2-flex`, `flux-2-pro`, `flux-2-max`, `flux-kontext-pro`, `flux-kontext-max` | text to image; edit |
 
 `estimate_cost` uses APIMart's per-second rates for Kling v3 (published) and

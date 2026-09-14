@@ -12,6 +12,17 @@ exact APIMart model id. Never substitute a direct vendor endpoint for an APIMart
 Set `APIMART_API_KEY` (get one at https://apimart.ai/keys). `APIMART_BASE_URL`
 optionally overrides the host for proxies.
 
+## Default model per use case
+
+Unless the user names another model:
+
+| Use case | Model |
+|---|---|
+| UGC and general video | `gemini-omni-1.1-flash-ext` (tool default) |
+| Video with voiceover | `grok-imagine-1.5-video-ext` |
+| High-quality video | `seedance-2.0` |
+| Images | `gpt-image-2-ext` (tool default) or `nano-banana-pro-ext` |
+
 ## Preflight every paid call
 
 1. Read `tool.get_info()["model_catalog"]` — pick an exact model id and an
@@ -42,6 +53,8 @@ optionally overrides the host for proxies.
 | `seedance-2.0` (`-fast`, `-mini`) | text, image, reference | 4–15 | 480p/720p (+1080p/4k on 2.0) | ≤9 images, 3 videos, 3 audios; audio needs image/video |
 | `seedance-2.5` | text, image, reference, edit | 4–30 or -1 | 480p/720p/1080p | ≤30 images, 10 videos, 10 audios; audio-only OK; frame/edit jobs force `size=adaptive` |
 | `gemini-omni-1.1-flash` | text, image, reference, edit | model decides (3–10s) | 360p/720p/1080p/4k | ≤10 images; 1 video ≤10s for edit/extend |
+| `gemini-omni-1.1-flash-ext` (default) | text, image, reference | 4/6/8/10 | 360p/720p/1080p/4k | 1 first frame, or 1 or 3 reference images; 1 motion `reference_videos` (drops duration); no last frame |
+| `grok-imagine-1.5-video-ext` | text, image, reference | 6–15 | 480p/720p | ≤7 images; 16:9, 9:16, 1:1, 3:2, 2:3 |
 
 Canonical fields: `image_url`/`image_path` (first frame), `last_image_url`/`last_image_path`,
 `reference_images`, `reference_videos`, `reference_audios`, `video_url` (edit source),
@@ -115,6 +128,11 @@ frame (+ last frame) sends `generation_type: "frame"`. `veo3.1-lite` is text-onl
 |---|---|---|
 | `flux-2-flex` / `flux-2-pro` / `flux-2-max` | exact `width`+`height` (≤4MP), or `aspect_ratio` + `resolution` 1MP–4MP | ≤8 |
 | `flux-kontext-pro` / `flux-kontext-max` | aspect ratio only (width/height snap to nearest ratio), ~1MP | ≤4 |
+| `gpt-image-2-ext` (default) | 15 ratios (incl. 2:1, 3:1, 1:3) + `resolution` 1k/2k/4k | ≤15 |
+| `nano-banana-pro-ext` | 10 ratios + `resolution` 1K/2K/4K | ≤14 |
+
+For GPT Image 2 and Nano Banana Pro, width/height snap to the nearest ratio;
+pass `resolution` explicitly for 2K/4K (default is the 1K tier).
 
 `steps`/`guidance` are flex-only. Set `generation_mode: "edit"` with
 `image_path(s)`/`image_url(s)` for edits. One image per request.

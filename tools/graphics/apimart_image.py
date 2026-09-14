@@ -24,19 +24,32 @@ from tools.base_tool import (
     ToolTier,
 )
 
-_DEFAULT_MODEL = "flux-2-pro"
+_DEFAULT_MODEL = "gpt-image-2-ext"
 _RATIOS = ("1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9", "9:21")
+_GPT_RATIOS = ("1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "16:9", "9:16", "2:1", "1:2", "3:1", "1:3", "21:9", "9:21")
+_NANO_RATIOS = ("1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9")
 _FLUX2_RESOLUTIONS = ("1MP", "2MP", "3MP", "4MP")
 _FLUX2_MAX_PIXELS = 4_194_304
 _OPTIONAL = ("seed", "prompt_upsampling", "safety_tolerance")
 
+
+def _model(family, max_images, ratios, resolutions=(), optional=_OPTIONAL):
+    return {
+        "family": family, "max_images": max_images, "ratios": ratios,
+        # First entry is the default tier; empty means the model has no resolution control.
+        "resolutions": resolutions, "optional_fields": optional,
+    }
+
+
 IMAGE_MODELS: dict[str, dict[str, Any]] = {
-    "flux-2-flex": {"family": "flux-2", "max_images": 8, "optional_fields": _OPTIONAL + ("steps", "guidance")},
-    "flux-2-pro": {"family": "flux-2", "max_images": 8, "optional_fields": _OPTIONAL},
-    "flux-2-max": {"family": "flux-2", "max_images": 8, "optional_fields": _OPTIONAL},
+    "gpt-image-2-ext": _model("gpt-image-2", 15, _GPT_RATIOS, ("1k", "2k", "4k"), ("official_fallback",)),
+    "nano-banana-pro-ext": _model("nano-banana-pro", 14, _NANO_RATIOS, ("1K", "2K", "4K"), ("official_fallback",)),
+    "flux-2-flex": _model("flux-2", 8, _RATIOS, ("2MP", "1MP", "3MP", "4MP"), _OPTIONAL + ("steps", "guidance")),
+    "flux-2-pro": _model("flux-2", 8, _RATIOS, ("2MP", "1MP", "3MP", "4MP")),
+    "flux-2-max": _model("flux-2", 8, _RATIOS, ("2MP", "1MP", "3MP", "4MP")),
     # Kontext output is ~1MP at a ratio; width/height make the task fail.
-    "flux-kontext-pro": {"family": "flux-kontext", "max_images": 4, "optional_fields": _OPTIONAL},
-    "flux-kontext-max": {"family": "flux-kontext", "max_images": 4, "optional_fields": _OPTIONAL},
+    "flux-kontext-pro": _model("flux-kontext", 4, _RATIOS),
+    "flux-kontext-max": _model("flux-kontext", 4, _RATIOS),
 }
 
 
@@ -68,6 +81,8 @@ class ApimartImage(BaseTool):
     }
     provider_matrix = {model: spec["family"] for model, spec in IMAGE_MODELS.items()}
     best_for = [
+        "GPT Image 2 (ext) generation and multi-reference edits up to 4K with 15 aspect ratios",
+        "Nano Banana Pro (ext) generation and editing up to 4K with as many as 14 references",
         "FLUX.2 flex/pro/max generation with exact dimensions up to 4MP and up to 8 references",
         "FLUX Kontext pro/max context-aware edits with up to 4 reference images",
     ]
@@ -84,8 +99,8 @@ class ApimartImage(BaseTool):
             "generation_mode": {"type": "string", "enum": ["generate", "edit"], "default": "generate"},
             "width": {"type": "integer"},
             "height": {"type": "integer"},
-            "aspect_ratio": {"type": "string", "enum": [*_RATIOS, "auto"]},
-            "resolution": {"type": "string", "enum": list(_FLUX2_RESOLUTIONS), "description": "FLUX.2 only."},
+            "aspect_ratio": {"type": "string", "description": "Allowed ratios depend on the model; see model_catalog."},
+            "resolution": {"type": "string", "description": "gpt-image-2: 1k/2k/4k; nano-banana-pro: 1K/2K/4K; FLUX.2: 1MP-4MP."},
             "seed": {"type": "integer"},
             "prompt_upsampling": {"type": "boolean"},
             "safety_tolerance": {"type": "integer"},
@@ -115,7 +130,10 @@ class ApimartImage(BaseTool):
     def get_info(self) -> dict[str, Any]:
         info = super().get_info()
         info["model_catalog"] = {
-            model: {"family": spec["family"], "max_images": spec["max_images"]}
+            model: {
+                "family": spec["family"], "max_images": spec["max_images"],
+                "aspect_ratios": list(spec["ratios"]), "resolutions": list(spec["resolutions"]),
+            }
             for model, spec in IMAGE_MODELS.items()
         }
         return info
@@ -127,29 +145,31 @@ class ApimartImage(BaseTool):
         if model not in IMAGE_MODELS:
             raise ValueError(f"Unsupported APIMart image model {model!r}; choose one of {sorted(IMAGE_MODELS)}")
         spec = IMAGE_MODELS[model]
-        payload: dict[str, Any] = {
-            "model": model,
-            "prompt": inputs.get("prompt", ""),
-            "output_format": _choice("output_format", inputs.get("output_format") or "png", ("png", "jpeg", "webp")),
-        }
+        family = spec["family"]
+        payload: dict[str, Any] = {"model": model, "prompt": inputs.get("prompt", "")}
+        if family.startswith("flux"):
+            payload["output_format"] = _choice(
+                "output_format", inputs.get("output_format") or "png", ("png", "jpeg", "webp")
+            )
 
         ratio = inputs.get("aspect_ratio")
         if ratio:
-            _choice("aspect_ratio", ratio, (*_RATIOS, "auto"))
+            _choice("aspect_ratio", ratio, (*spec["ratios"], "auto"))
         width, height = inputs.get("width"), inputs.get("height")
 
-        if spec["family"] == "flux-2":
-            if ratio or not (width and height):
-                payload["size"] = ratio or "1:1"
-                payload["resolution"] = _choice("resolution", inputs.get("resolution") or "2MP", _FLUX2_RESOLUTIONS)
-            elif int(width) * int(height) > _FLUX2_MAX_PIXELS:
+        if family == "flux-2" and not ratio and width and height:
+            if int(width) * int(height) > _FLUX2_MAX_PIXELS:
                 raise ValueError(f"FLUX.2 output is limited to 4MP; {width}x{height} is larger")
-            else:
-                payload["width"], payload["height"] = int(width), int(height)
+            payload["width"], payload["height"] = int(width), int(height)
         else:
             payload["size"] = ratio or (
-                aspect_ratio_from_size(int(width), int(height), list(_RATIOS)) if width and height else "1:1"
+                aspect_ratio_from_size(int(width), int(height), list(spec["ratios"])) if width and height else "1:1"
             )
+            if spec["resolutions"]:
+                # Tiers are case-sensitive upstream (1k vs 1K); accept either spelling.
+                requested = str(inputs.get("resolution") or spec["resolutions"][0])
+                tier = next((r for r in spec["resolutions"] if r.lower() == requested.lower()), requested)
+                payload["resolution"] = _choice("resolution", tier, spec["resolutions"])
 
         mode = _choice("generation_mode", inputs.get("generation_mode") or "generate", ("generate", "edit"))
         images = list(inputs.get("image_urls") or [])
@@ -193,7 +213,7 @@ class ApimartImage(BaseTool):
                 timeout=float(inputs.get("poll_timeout", 600.0)),
             )
             urls = apimart_client.result_urls(data)
-            requested = Path(inputs.get("output_path") or f"apimart_image.{payload['output_format']}")
+            requested = Path(inputs.get("output_path") or f"apimart_image.{payload.get('output_format', 'png')}")
             output_paths: list[Path] = []
             for index, url in enumerate(urls):
                 path = requested if index == 0 else requested.with_name(f"{requested.stem}_{index + 1}{requested.suffix}")
