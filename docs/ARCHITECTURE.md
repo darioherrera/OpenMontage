@@ -146,6 +146,7 @@ Three selector tools abstract multi-provider capabilities:
 | `image_selector` | Image generation | Ranks discovered providers from the live registry; no hardcoded provider order |
 | `video_selector` | Video generation | Ranks discovered providers from the live registry; user preference is respected when explicitly provided |
 | `atlas_image` / `atlas_video` | Atlas Cloud generation | Exposes exact per-model route catalogs for image generation/editing and text/image/reference/video-edit generation |
+| `apimart_image` / `apimart_video` | APIMart generation | Cataloged Sora 2, Veo 3.1, Kling v3, Seedance 2.x, Gemini Omni video and FLUX.2/Kontext image models with per-model validation |
 
 Selectors route based on: user preference when explicitly set, then scored ranking across available providers. They adapt input schemas between providers transparently.
 

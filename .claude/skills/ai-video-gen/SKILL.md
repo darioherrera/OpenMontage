@@ -22,7 +22,7 @@ Generate AI videos from text prompts. Supports multiple providers via two API ga
 | **fal.ai** | `FAL_KEY` | **Seedance 2.0** (standard + fast), Kling v3/v2.1, MiniMax, VEO | `seedance_video`, `kling_video`, `minimax_video`, `veo_video` |
 | **HeyGen** | `HEYGEN_API_KEY` | VEO 3.1, Kling Pro, Sora v2, Runway Gen-4, Seedance Pro / Lite (1.x) | `heygen_video` |
 | **Gemini API** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini Omni Flash (generation + conversational editing) | `gemini_omni_video` |
-| **APIMart** | `APIMART_API_KEY` | Kling v3, Kling v3 Omni (720p/1080p/4K, 3-15 s, multi-shot), Veo 3.1 fast/quality/lite | `apimart_video` (see Layer 3 `apimart-video`) |
+| **APIMart** | `APIMART_API_KEY` | Sora 2 / Pro, Veo 3.1 fast/quality/lite, Kling v3 / v3 Omni (multi-shot, 4K), Seedance 2.0 / 2.5, Gemini Omni 1.1 Flash | `apimart_video` (see Layer 3 `apimart`) |
 
 **Iterative editing — Gemini Omni.** When the brief calls for *refining an existing clip* (add/remove objects, restyle, change lighting or on-screen text) rather than regenerating, Gemini Omni Flash is the only provider in the fleet with stateful multi-turn editing. See Layer 3 `gemini-omni` for the authoritative prompting guide (reference-image tags, timecode syntax, edit-prompt rules) before writing any prompt for it.
 
