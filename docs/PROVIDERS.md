@@ -55,6 +55,7 @@ AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
 ATLASCLOUD_API_KEY=          # Atlas Cloud image/video gateway
+APIMART_API_KEY=             # APIMart gateway: Sora 2, Veo 3.1, Kling v3, Seedance, Gemini Omni, FLUX
 
 # KLING OFFICIAL DIRECT API
 KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
@@ -427,6 +428,30 @@ suffixes or parameter names as interchangeable.
 Inspect `get_info()["model_catalog"]` for exact IDs, operations, media shapes,
 durations, and resolutions. Prices are estimates sourced from each model's
 machine-readable Atlas page and should be reconfirmed before a paid batch.
+
+---
+
+### APIMart — Image and Video Gateway
+
+**Tools:** `apimart_image`, `apimart_video`
+**Env var:** `APIMART_API_KEY`
+**Skill:** `.agents/skills/apimart/SKILL.md`
+
+One key and one async task API (`/v1/videos/generations`, `/v1/images/generations`,
+`/v1/tasks/{id}`) in front of these explicitly cataloged models:
+
+| Family | Model ids | Operations |
+|---|---|---|
+| Sora 2 | `sora-2`, `sora-2-pro` | text/image to video |
+| Veo 3.1 | `veo3.1-fast`, `veo3.1-quality`, `veo3.1-lite` | text/image (first-last frame) to video; reference images (fast) |
+| Kling v3 | `kling-v3`, `kling-v3-omni` | text/image to video; Omni adds references and video edit |
+| Seedance | `seedance-2.0`, `seedance-2.0-fast`, `seedance-2.0-mini`, `seedance-2.5` | text/image/reference to video; 2.5 adds video edit |
+| Gemini Omni | `gemini-omni-1.1-flash` | text/image/reference to video; video edit |
+| FLUX | `flux-2-flex`, `flux-2-pro`, `flux-2-max`, `flux-kontext-pro`, `flux-kontext-max` | text to image; edit |
+
+Pricing is not cataloged — the tool reports the actual USD charge APIMart returns
+on the finished task. Local images are uploaded automatically; reference videos
+and audio must be public URLs.
 
 ---
 
@@ -1421,6 +1446,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
+| **APIMart** | `APIMART_API_KEY` | `apimart_image`, `apimart_video` | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |
