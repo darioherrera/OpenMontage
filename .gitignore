@@ -104,3 +104,6 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Licensed course material (user-supplied, do not commit)
+.agents/skills/ugc-avatar-realism/references/avatarhype-biblioteca.md

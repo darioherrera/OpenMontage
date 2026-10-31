@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        font-weight: 400;
+        src: url("assets/fonts/inter-latin-400-normal.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Inter";
+        font-weight: 600;
+        src: url("assets/fonts/inter-latin-600-normal.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Inter";
+        font-weight: 700;
+        src: url("assets/fonts/inter-latin-700-normal.woff2") format("woff2");
+      }
+      :root {
+        --navy: #0a1e30;
+        --blue: #1d4ed8;
+        --paper: #f7f9fc;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--navy);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--navy);
+      }
+      /* Untimed camera wrappers: punch-ins / push-ins / zoom-blur handoffs animate these, never the timed <video>. */
+      .cam {
+        position: absolute;
+        inset: 0;
+      }
+      .footage {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Captions: lower-middle third, bottom edge above the ~260px Reels UI zone. */
+      #captions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1120px;
+        height: 520px;
+        z-index: 20;
+      }
+      .cg {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 0 60px;
+      }
+      .cg .lead {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        max-width: 960px;
+      }
+      .cg .w {
+        display: inline-block;
+        font-weight: 600;
+        font-size: 52px;
+        line-height: 1.1;
+        letter-spacing: 0.01em;
+        color: var(--paper);
+        background: rgba(10, 30, 48, 0.9);
+        padding: 6px 18px 8px;
+        border-radius: 12px;
+      }
+      .cg .key {
+        display: block;
+        font-weight: 700;
+        font-size: 140px;
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+        color: var(--blue);
+        background: var(--paper);
+        padding: 8px 36px 14px;
+        border-radius: 26px;
+        white-space: nowrap;
+        box-shadow: 0 18px 50px rgba(10, 30, 48, 0.45);
+        transform-origin: 50% 50%;
+      }
+
+      /* Grid cutaway: full-frame navy, tiles above the captions. Hides her raised open hand during "hacemos seis". */
+      #grid {
+        position: absolute;
+        inset: 0;
+        background: var(--navy);
+        z-index: 15;
+        overflow: hidden;
+      }
+      #grid-box {
+        position: absolute;
+        top: 190px;
+        left: 66px;
+        width: 948px;
+        display: grid;
+        grid-template-columns: repeat(3, 300px);
+        gap: 24px;
+        justify-content: center;
+        transform-origin: 50% 50%;
+      }
+      #grid .tile {
+        width: 300px;
+        height: 400px;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 6px solid var(--paper);
+        box-shadow: 0 16px 40px rgba(10, 30, 48, 0.5);
+        transform-origin: 50% 50%;
+      }
+      #grid .tile img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Cutaway insert: empty ad slot during "y no tienes nada para sustituirlo". */
+      #adslot {
+        position: absolute;
+        inset: 0;
+        background: var(--navy);
+        z-index: 12;
+        overflow: hidden;
+      }
+      #adslot-box {
+        position: absolute;
+        left: 200px;
+        top: 170px;
+        width: 680px;
+        height: 850px;
+        border: 8px dashed var(--blue);
+        border-radius: 36px;
+        background: rgba(29, 78, 216, 0.08);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        transform-origin: 50% 50%;
+      }
+      #adslot-plus {
+        font-weight: 400;
+        font-size: 220px;
+        line-height: 1;
+        color: var(--blue);
+      }
+      #adslot-label {
+        font-weight: 600;
+        font-size: 44px;
+        letter-spacing: 0.08em;
+        color: #a9bdd1;
+      }
+
+      /* End card */
+      #endcard {
+        position: absolute;
+        inset: 0;
+        background: var(--navy);
+        z-index: 30;
+        overflow: hidden;
+      }
+      #end-glow {
+        position: absolute;
+        left: 90px;
+        top: 460px;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(29, 78, 216, 0.34) 0%, rgba(29, 78, 216, 0) 68%);
+      }
+      #end-stack {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 90px 120px;
+        text-align: center;
+      }
+      #end-logo {
+        display: block;
+        width: 200px;
+        height: 200px;
+      }
+      #end-word {
+        margin-top: 34px;
+        font-weight: 700;
+        font-size: 128px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--paper);
+      }
+      #end-rule {
+        display: block;
+        width: 140px;
+        height: 6px;
+        margin: 56px 0 50px;
+        border-radius: 3px;
+        background: var(--blue);
+        transform-origin: 50% 50%;
+      }
+      #end-line {
+        font-weight: 600;
+        font-size: 60px;
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+        color: var(--paper);
+        max-width: 820px;
+        text-wrap: balance;
+      }
+      #end-url {
+        margin-top: 44px;
+        font-weight: 400;
+        font-size: 40px;
+        letter-spacing: 0.02em;
+        color: #a9bdd1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="29.3" data-width="1080" data-height="1920">
+      <!-- PICTURE (hard cuts, track 0), each clip inside an untimed camera wrapper; transform-origin sits on the face -->
+      <div id="cam1" class="cam" style="transform-origin: 50% 36%">
+      <video data-color-grading="{&quot;preset&quot;:null,&quot;intensity&quot;:1,&quot;adjust&quot;:{&quot;exposure&quot;:0,&quot;contrast&quot;:0.2,&quot;highlights&quot;:0,&quot;shadows&quot;:0,&quot;whites&quot;:0,&quot;blacks&quot;:0,&quot;temperature&quot;:0,&quot;tint&quot;:0,&quot;vibrance&quot;:0,&quot;saturation&quot;:-1},&quot;details&quot;:{&quot;vignette&quot;:0,&quot;vignetteMidpoint&quot;:0.5,&quot;vignetteRoundness&quot;:0,&quot;vignetteFeather&quot;:0.65,&quot;grain&quot;:0,&quot;grainSize&quot;:0.25,&quot;grainRoughness&quot;:0.5},&quot;effects&quot;:{&quot;blur&quot;:0,&quot;pixelate&quot;:0,&quot;chromaBleed&quot;:0,&quot;tapeDamage&quot;:0,&quot;tapeTracking&quot;:0,&quot;tapeNoise&quot;:1,&quot;tapeSpeed&quot;:0.5,&quot;filmArtifacts&quot;:0,&quot;halftone&quot;:0,&quot;halftoneSize&quot;:0,&quot;twoInkPrint&quot;:0,&quot;twoInkPrintSize&quot;:0,&quot;ascii&quot;:0,&quot;asciiSize&quot;:0.06578947368421052,&quot;asciiInvert&quot;:0,&quot;asciiStyle&quot;:0,&quot;asciiColor&quot;:1,&quot;asciiRotation&quot;:0,&quot;dither&quot;:0,&quot;ditherSize&quot;:0,&quot;bloom&quot;:0,&quot;bloomRadius&quot;:8,&quot;monoScreen&quot;:0,&quot;monoScreenSize&quot;:0,&quot;monoScreenAngle&quot;:0,&quot;monoScreenSpread&quot;:0,&quot;monoScreenShape&quot;:0,&quot;monoScreenInvert&quot;:0,&quot;scanlines&quot;:0,&quot;scanlineCount&quot;:0,&quot;scanlineSoftness&quot;:0,&quot;chromaticAberration&quot;:0,&quot;chromaticAngle&quot;:0,&quot;crtCurvature&quot;:0,&quot;digitalGlitch&quot;:0,&quot;digitalGlitchColorSplit&quot;:0,&quot;digitalGlitchLineTear&quot;:0,&quot;digitalGlitchPixelate&quot;:0,&quot;digitalGlitchBlockAmount&quot;:0,&quot;digitalGlitchBlockDisplacement&quot;:0,&quot;digitalGlitchBlockOpacity&quot;:0,&quot;digitalGlitchSpeed&quot;:0,&quot;engraving&quot;:0,&quot;engravingSpacing&quot;:0.4117647058823529,&quot;engravingMinThickness&quot;:0.2,&quot;engravingMaxThickness&quot;:0.4571428571428572,&quot;engravingAngle&quot;:0.25,&quot;engravingContrast&quot;:0.4666666666666667,&quot;engravingSharpness&quot;:0.59,&quot;engravingWave&quot;:0.2,&quot;engravingWaveFrequency&quot;:0.2222222222222222,&quot;crosshatch&quot;:0,&quot;crosshatchSpacing&quot;:0.28,&quot;crosshatchThickness&quot;:0.25,&quot;crosshatchAngle&quot;:0.25,&quot;crosshatchContrast&quot;:0.3333333333333333,&quot;crosshatchEdges&quot;:0.5,&quot;crosshatchLineWeight&quot;:0,&quot;crosshatchWave&quot;:0.33,&quot;crosshatchWaveFrequency&quot;:0.2222222222222222,&quot;kuwahara&quot;:0,&quot;kuwaharaRadius&quot;:0.14285714285714285,&quot;kuwaharaSharpness&quot;:0.3125,&quot;kuwaharaSaturation&quot;:0.5},&quot;lut&quot;:null,&quot;colorSpace&quot;:&quot;rec709&quot;}" id="v1" class="footage" src="assets/clips/clip1_hook.mp4" data-start="0" data-duration="7" data-media-start="0" data-track-index="0" muted playsinline style="--hf-color-grading-intensity: 0"></video>
+      </div>
+      <!-- clip2 + clip3 re-cut: pauses removed, one <video>/<audio> per kept phrase (jump cuts). Keep in sync with PIECES in the script. -->
+      <div id="cam2" class="cam" style="transform-origin: 50% 37%">
+        <video id="v2a" class="footage" src="assets/clips/clip2_dolor_v3.mp4" data-start="7" data-duration="2.16" data-media-start="0.28" data-track-index="0" muted playsinline></video>
+        <video id="v2b" class="footage" src="assets/clips/clip2_dolor_v3.mp4" data-start="9.16" data-duration="1.14" data-media-start="3.2" data-track-index="0" muted playsinline></video>
+        <video id="v2c" class="footage" src="assets/clips/clip2_dolor_v3.mp4" data-start="10.3" data-duration="1.1" data-media-start="5" data-track-index="0" muted playsinline></video>
+        <video id="v2d" class="footage" src="assets/clips/clip2_dolor_v3.mp4" data-start="11.4" data-duration="1.9" data-media-start="6.7" data-track-index="0" muted playsinline></video>
+      </div>
+      <!-- B-ROLL SLOT (6 s): replace assets/broll/broll-andromeda.mp4 with the real render (same path feeds #broll and #a-broll). -->
+      <div id="camb" class="cam">
+        <video id="broll" class="footage" src="assets/broll/broll-andromeda.mp4" data-start="13.3" data-duration="6" data-media-start="0" data-track-index="0" muted playsinline></video>
+      </div>
+      <div id="cam3" class="cam" style="transform-origin: 50% 38%">
+        <video id="v3e" class="footage" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="19.3" data-duration="3.16" data-media-start="0.3" data-track-index="0" muted playsinline></video>
+        <video id="v3f" class="footage" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="22.46" data-duration="1.24" data-media-start="4.02" data-track-index="0" muted playsinline></video>
+        <video id="v3g" class="footage" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="23.7" data-duration="3.6" data-media-start="6.02" data-track-index="0" muted playsinline></video>
+      </div>
+
+      <!-- CUTAWAY INSERT -->
+      <section id="adslot" class="clip" data-start="11.4" data-duration="1" data-track-index="4">
+        <div id="adslot-box">
+          <div id="adslot-plus">+</div>
+          <div id="adslot-label">SIN ANUNCIO NUEVO</div>
+        </div>
+      </section>
+
+      <!-- SFX (Pixabay Content License, bundled media-use library; see assets/sfx/CREDITS.md). Kept well under the voice. -->
+      <audio id="sfx-whoosh1" src="assets/sfx/whoosh-short.mp3" data-start="6.8" data-duration="0.57" data-track-index="11" data-volume="0.25"></audio>
+      <audio id="sfx-whoosh2" src="assets/sfx/whoosh-short.mp3" data-start="13.1" data-duration="0.57" data-track-index="11" data-volume="0.25"></audio>
+      <audio id="sfx-whoosh3" src="assets/sfx/whoosh-short.mp3" data-start="19.1" data-duration="0.57" data-track-index="11" data-volume="0.25"></audio>
+      <audio id="sfx-impact" src="assets/sfx/impact-bass-1.mp3" data-start="5.64" data-duration="2.12" data-track-index="12" data-volume="0.1"></audio>
+      <audio id="sfx-pop1" src="assets/sfx/pop.mp3" data-start="19.98" data-duration="0.72" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-pop2" src="assets/sfx/pop.mp3" data-start="20.12" data-duration="0.72" data-track-index="14" data-volume="0.35"></audio>
+      <audio id="sfx-pop3" src="assets/sfx/pop.mp3" data-start="20.26" data-duration="0.72" data-track-index="15" data-volume="0.35"></audio>
+
+      <!-- SOUND (voice only). Gain chain lifts ~-27/-28/-23 LUFS clips to ~-14 LUFS; limiter holds -1 dBTP. -->
+      <audio id="a1" src="assets/clips/clip1_hook.mp4" data-start="0" data-duration="7" data-media-start="0" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a1g1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a1g2&quot;,&quot;params&quot;:{&quot;gain&quot;:2.7}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a1l&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a2a" src="assets/clips/clip2_dolor_v3.mp4" data-start="7" data-duration="2.16" data-media-start="0.28" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2ag1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2ag2&quot;,&quot;params&quot;:{&quot;gain&quot;:3.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a2al&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a2b" src="assets/clips/clip2_dolor_v3.mp4" data-start="9.16" data-duration="1.14" data-media-start="3.2" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2bg1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2bg2&quot;,&quot;params&quot;:{&quot;gain&quot;:3.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a2bl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a2c" src="assets/clips/clip2_dolor_v3.mp4" data-start="10.3" data-duration="1.1" data-media-start="5" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2cg1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2cg2&quot;,&quot;params&quot;:{&quot;gain&quot;:3.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a2cl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a2d" src="assets/clips/clip2_dolor_v3.mp4" data-start="11.4" data-duration="1.9" data-media-start="6.7" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2dg1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a2dg2&quot;,&quot;params&quot;:{&quot;gain&quot;:3.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a2dl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a-broll" src="assets/broll/broll-andromeda.mp4" data-start="13.3" data-duration="6" data-media-start="0" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;abg1&quot;,&quot;params&quot;:{&quot;gain&quot;:12}},{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;abg2&quot;,&quot;params&quot;:{&quot;gain&quot;:5}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;abl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a3e" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="19.3" data-duration="3.16" data-media-start="0.3" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a3eg1&quot;,&quot;params&quot;:{&quot;gain&quot;:15.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a3el&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a3f" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="22.46" data-duration="1.24" data-media-start="4.02" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a3fg1&quot;,&quot;params&quot;:{&quot;gain&quot;:15.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a3fl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+      <audio id="a3g" src="assets/clips/clip3_mecanismo_cta_v2.mp4" data-start="23.7" data-duration="3.6" data-media-start="6.02" data-track-index="10" data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;gain&quot;,&quot;id&quot;:&quot;a3gg1&quot;,&quot;params&quot;:{&quot;gain&quot;:15.2}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;a3gl&quot;,&quot;params&quot;:{&quot;limit&quot;:-1,&quot;attack&quot;:5,&quot;release&quot;:50,&quot;level_out&quot;:0}}]}"></audio>
+
+      <!-- GRID CUTAWAY: 6 Optimy creatives during "hacemos seis anuncios nuevos al mes" -->
+      <section id="grid" class="clip" data-start="19.96" data-duration="1.66" data-track-index="3">
+        <div id="grid-box">
+          <div class="tile"><img src="assets/thumbs/demostracion.webp" alt=""></div>
+          <div class="tile"><img src="assets/thumbs/antes-y-despues.webp" alt=""></div>
+          <div class="tile"><img src="assets/thumbs/selfie-ugc.webp" alt=""></div>
+          <div class="tile"><img src="assets/thumbs/testimonio.webp" alt=""></div>
+          <div class="tile"><img src="assets/thumbs/unboxing.webp" alt=""></div>
+          <div class="tile"><img src="assets/thumbs/estadistica.webp" alt=""></div>
+        </div>
+      </section>
+
+      <!-- CAPTIONS (groups built from CAPTIONS below; mirror of captions/captions.json) -->
+      <div id="captions"></div>
+
+      <!-- END CARD -->
+      <section id="endcard" class="clip" data-start="27.3" data-duration="2" data-track-index="5">
+        <div id="end-glow"></div>
+        <div id="end-stack">
+          <img id="end-logo" src="assets/logos/optimy-marca-invertido-512.png" alt="Optimy">
+          <div id="end-word">Optimy</div>
+          <div id="end-rule"></div>
+          <div id="end-line">Creatividades para tu marca todos los meses</div>
+          <div id="end-url">optimy.es</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Global seconds. Source: captions/captions.json (Whisper words, onsets aligned to RMS envelope).
+      const CAPTIONS = [
+        { start: 1.04, end: 2.48, key: ["3.000 €", 1.04], tail: [["Y", 1.86], ["DOS", 1.96], ["SEMANAS", 2.1]] },
+        { start: 2.48, end: 3.45, lead: [["DE", 2.48]], key: ["RODAJE", 2.6] },
+        { start: 3.52, end: 4.9, lead: [["¿POR", 3.52], ["UN", 3.72], ["ANUNCIO?", 3.82]] },
+        { start: 5.66, end: 8.0, key: ["NI DE COÑA", 5.66], slam: true },
+        { start: 8.33, end: 10.9, lead: [["TU", 8.33], ["ANUNCIO", 8.42], ["GANADOR", 8.76]], key: ["SE QUEMA", 9.3], tail: [["EN", 9.76], ["SEMANAS", 9.98]] },
+        { start: 11.24, end: 12.8, lead: [["SUBE", 11.24], ["LA", 11.54]], key: ["FRECUENCIA", 11.68] },
+        { start: 13.04, end: 14.4, lead: [["BAJA", 13.04], ["EL", 13.46]], key: ["CTR", 13.6] },
+        { start: 14.74, end: 18.0, lead: [["Y", 14.74], ["NO", 14.84], ["TIENES", 14.96], ["NADA", 15.22], ["PARA", 15.54]], key: ["SUSTITUIRLO", 15.74] },
+        { start: 28.34, end: 30.96, lead: [["EN", 28.34], ["OPTIMY", 28.46], ["TE", 28.86], ["HACEMOS", 29.02]], key: ["6 ANUNCIOS", 29.36], tail: [["NUEVOS", 29.98], ["AL", 30.3], ["MES", 30.44]] },
+        { start: 31.02, end: 31.46, key: ["CON IA", 31.02] },
+        { start: 32.06, end: 33.26, lead: [["PRIMERO", 32.06]], key: ["APRUEBAS UNO", 32.5] },
+        { start: 34.06, end: 34.94, lead: [["DÉJAME", 34.06]], key: ["TU MARCA", 34.48] },
+        { start: 34.96, end: 36.44, lead: [["Y", 34.96], ["TE", 35.06], ["ENVÍO", 35.14]], key: ["6 ÁNGULOS", 35.42], tail: [["NUEVOS", 36.12]] },
+        { start: 36.46, end: 37.62, lead: [["QUE", 36.46], ["PODRÍAMOS", 36.64]], key: ["TRABAJAR", 37.08] },
+      ];
+
+      // Re-cut: kept phrase pieces as [old clip offset, media start, duration, new global start] (mirrors the <video>/<audio> pieces).
+      // remap() turns old global times (captions.json) into the new timeline; times inside a removed pause snap to the next piece.
+      const PIECES = [
+        [0, 0, 7, 0],
+        [8, 0.28, 2.16, 7], [8, 3.2, 1.14, 9.16], [8, 5, 1.1, 10.3], [8, 6.7, 1.9, 11.4],
+        [28, 0.3, 3.16, 19.3], [28, 4.02, 1.24, 22.46], [28, 6.02, 3.6, 23.7],
+      ];
+      const remap = (t) => {
+        const off = t >= 28 ? 28 : t >= 8 ? 8 : 0;
+        const ps = PIECES.filter((p) => p[0] === off);
+        for (const [, ms, d, s] of ps) if (t - off < ms + d) return s + Math.max(0, t - off - ms);
+        const [, , d, s] = ps[ps.length - 1];
+        return s + d;
+      };
+      CAPTIONS.forEach((g) => {
+        g.end = remap(g.end);
+        if (g.key) g.key[1] = remap(g.key[1]);
+        [g.lead, g.tail].forEach((ws) => ws && ws.forEach((w) => (w[1] = remap(w[1]))));
+      });
+
+      const host = document.getElementById("captions");
+      const wordRow = (words, cls) => {
+        const row = document.createElement("div");
+        row.className = cls;
+        words.forEach(([text, t]) => {
+          const s = document.createElement("span");
+          s.className = "w";
+          s.textContent = text;
+          s.dataset.t = t;
+          row.appendChild(s);
+        });
+        return row;
+      };
+      CAPTIONS.forEach((g, i) => {
+        const el = document.createElement("div");
+        el.className = "cg";
+        el.id = "cg-" + i;
+        if (g.lead) el.appendChild(wordRow(g.lead, "lead"));
+        if (g.key) {
+          const k = document.createElement("div");
+          k.className = "key";
+          k.textContent = g.key[0];
+          el.appendChild(k);
+        }
+        if (g.tail) el.appendChild(wordRow(g.tail, "lead tail"));
+        host.appendChild(el);
+      });
+
+      Promise.all([
+        document.fonts.load('600 52px "Inter"'),
+        document.fonts.load('700 140px "Inter"'),
+        document.fonts.load('400 40px "Inter"'),
+      ]).then(() => {
+        const tl = gsap.timeline({ paused: true });
+
+        // Hook remate: black-and-white from "Ni de coña" to the end of clip1 (grading owned by data-color-grading on #v1).
+        tl.set("#v1", { "--hf-color-grading-intensity": 1 }, 5.66);
+
+        // Fake multi-cam: hard punch-in per phrase + slow push (x1.05) inside every shot, optional drift.
+        // Shot = [start, end, scale, driftX px]. Drift only where scale >= 1.1 so edges never show.
+        // Segment cuts get a zoom-through handoff (transitions/css-scale.md), split around the cut because clips abut.
+        // Every jump cut between phrase pieces also changes framing.
+        const CUTS = [7, 13.3, 19.3];
+        const TX = 0.14;
+        const PUSH = 1.04;
+        const CAMS = [
+          ["#cam1", PUSH, [[0, 1.04, 1.25, -14], [1.04, 2.48, 1, 0], [2.48, 3.52, 1.25, 14], [3.52, 5.66, 1.1, -12], [5.66, 7, 1.27, 0]]],
+          ["#cam2", PUSH, [[7, 8.02, 1, 0], [8.02, 9.16, 1.25, 14], [9.16, 10.3, 1.1, -12], [10.3, 11.4, 1.25, 12], [11.4, 12.4, 1, 0], [12.4, 13.3, 1.1, 0]]],
+          ["#camb", 1, [[13.3, 19.3, 1, 0]]], // ponytail: B-roll carries its own motion and text, no push
+          ["#cam3", PUSH, [[19.3, 19.96, 1, 0], [19.96, 22.46, 1.25, -10], [22.46, 23.7, 1.1, 12], [23.7, 24.64, 1, 0], [24.64, 26.14, 1.25, 10], [26.14, 27.3, 1.1, 0]]],
+        ];
+        CAMS.forEach(([cam, push, shots]) => {
+          shots.forEach(([a, b, s, dx]) => {
+            tl.set(cam, { scale: s, x: 0, y: 0 }, a);
+            if (CUTS.includes(a)) {
+              tl.fromTo(cam, { scale: s * 1.3, filter: "blur(10px)" }, { scale: s, filter: "blur(0px)", duration: TX, ease: "power3.out", immediateRender: false }, a);
+              a += TX;
+            }
+            const out = CUTS.includes(b);
+            if (out) b -= TX;
+            const to = { scale: s * push, duration: b - a, ease: "none", immediateRender: false };
+            if (dx) to.x = dx;
+            tl.fromTo(cam, dx ? { scale: s, x: 0 } : { scale: s }, to, a);
+            if (out) tl.to(cam, { scale: s * push * 1.35, filter: "blur(10px)", duration: TX, ease: "power3.in" }, b);
+          });
+        });
+        // "NI DE COÑA" impact: 4-frame decaying shake on the slam shot.
+        const f = 1 / 30;
+        tl.to("#cam1", { keyframes: [{ x: -18, y: 10, duration: f }, { x: 14, y: -8, duration: f }, { x: -8, y: 5, duration: f }, { x: 3, y: -2, duration: f }, { x: 0, y: 0, duration: f }], ease: "none" }, 5.66);
+
+        // Cutaway insert: slot snaps in, then creeps forward.
+        tl.fromTo("#adslot-box", { scale: 1.08, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power3.out" }, 11.4);
+        tl.fromTo("#adslot-box", { scale: 1 }, { scale: 1.04, duration: 0.78, ease: "none", immediateRender: false }, 11.62);
+        tl.fromTo("#adslot-plus", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2)" }, 11.49);
+
+        // Captions: word-synced lead-ins, one keyword slam per phrase, hard kill at group end.
+        const keyIn = [
+          [{ scale: 1.35, filter: "blur(10px)", opacity: 0 }, { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.32, ease: "power4.out" }],
+          [{ y: 70, scale: 0.85, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.3, ease: "expo.out" }],
+          [{ x: -90, opacity: 0 }, { x: 0, opacity: 1, duration: 0.28, ease: "circ.out" }],
+        ];
+        CAPTIONS.forEach((g, i) => {
+          const el = document.getElementById("cg-" + i);
+          el.querySelectorAll(".w").forEach((w) => {
+            tl.fromTo(w, { opacity: 0, y: 26, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.18, ease: "power3.out" }, +w.dataset.t);
+          });
+          const k = el.querySelector(".key");
+          if (k) {
+            const fit = window.__hyperframes.fitTextFontSize(g.key[0], {
+              fontFamily: "Inter",
+              fontWeight: 700,
+              maxWidth: g.slam ? 860 : 820,
+              baseFontSize: g.slam ? 168 : 140,
+              minFontSize: 80,
+              step: 2,
+            });
+            k.style.fontSize = fit.fontSize + "px";
+            if (g.slam) {
+              tl.fromTo(
+                k,
+                { scale: 2.3, rotation: -9, filter: "blur(18px)", opacity: 0 },
+                { scale: 1, rotation: -3, filter: "blur(0px)", opacity: 1, duration: 0.34, ease: "power4.out" },
+                g.key[1],
+              );
+            } else {
+              const [from, to] = keyIn[i % keyIn.length];
+              tl.fromTo(k, from, to, g.key[1]);
+            }
+          }
+          tl.to(el, { opacity: 0, duration: 0.12, ease: "power2.in" }, g.end - 0.12);
+          tl.set(el, { visibility: "hidden" }, g.end);
+        });
+
+        // Grid cutaway: staggered pop landing on "seis", slow creep, hard cut back to the close at 21.62.
+        gsap.utils.toArray("#grid .tile").forEach((el, i) => {
+          tl.fromTo(el, { scale: 0, opacity: 0, y: 24 }, { scale: 1, opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 19.98 + i * 0.07);
+        });
+        tl.fromTo("#grid-box", { scale: 1 }, { scale: 1.04, duration: 1.64, ease: "none" }, 19.98);
+
+        // End card.
+        const END = 27.3;
+        tl.fromTo("#end-glow", { scale: 0.9, opacity: 0.6 }, { scale: 1.08, opacity: 1, duration: 2, ease: "sine.inOut" }, END);
+        tl.fromTo("#end-logo", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "power3.out" }, END);
+        tl.fromTo("#end-word", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, END + 0.12);
+        tl.fromTo("#end-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, END + 0.28);
+        tl.fromTo("#end-line", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "circ.out" }, END + 0.36);
+        tl.fromTo("#end-url", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, END + 0.55);
+
+        window.__timelines["main"] = tl;
+      });
+    </script>
+  </body>
+</html>

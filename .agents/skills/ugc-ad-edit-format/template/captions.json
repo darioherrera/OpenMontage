@@ -1,0 +1,19 @@
+{
+  "source": "OpenAI whisper-1 word timestamps (captions/*.whisper.json) for word order/text, onsets re-aligned to the clips' 80 ms RMS speech envelope (whisper word times drifted up to ~1.5 s). Times are source-offset seconds (clip1 +0, clip2 +8, clip3 +28); index.html remaps them through PIECES onto the jump-cut timeline. clip2 = clip2_dolor_v3.mp4 (captions/clip2_v3.whisper.json); clip3 = clip3_mecanismo_cta_v2.mp4 (captions/clip3_v2.whisper.json, Whisper 'Optimi' captioned OPTIMY).",
+  "groups": [
+    { "start": 1.04, "end": 2.48, "key": ["3.000 €", 1.04], "tail": [["Y", 1.86], ["DOS", 1.96], ["SEMANAS", 2.1]] },
+    { "start": 2.48, "end": 3.45, "lead": [["DE", 2.48]], "key": ["RODAJE", 2.6] },
+    { "start": 3.52, "end": 4.9, "lead": [["¿POR", 3.52], ["UN", 3.72], ["ANUNCIO?", 3.82]] },
+    { "start": 5.66, "end": 8.0, "key": ["NI DE COÑA", 5.66], "slam": true },
+    { "start": 8.33, "end": 10.9, "lead": [["TU", 8.33], ["ANUNCIO", 8.42], ["GANADOR", 8.76]], "key": ["SE QUEMA", 9.3], "tail": [["EN", 9.76], ["SEMANAS", 9.98]] },
+    { "start": 11.24, "end": 12.8, "lead": [["SUBE", 11.24], ["LA", 11.54]], "key": ["FRECUENCIA", 11.68] },
+    { "start": 13.04, "end": 14.4, "lead": [["BAJA", 13.04], ["EL", 13.46]], "key": ["CTR", 13.6] },
+    { "start": 14.74, "end": 18.0, "lead": [["Y", 14.74], ["NO", 14.84], ["TIENES", 14.96], ["NADA", 15.22], ["PARA", 15.54]], "key": ["SUSTITUIRLO", 15.74] },
+    { "start": 28.34, "end": 30.96, "lead": [["EN", 28.34], ["OPTIMY", 28.46], ["TE", 28.86], ["HACEMOS", 29.02]], "key": ["6 ANUNCIOS", 29.36], "tail": [["NUEVOS", 29.98], ["AL", 30.3], ["MES", 30.44]] },
+    { "start": 31.02, "end": 31.46, "key": ["CON IA", 31.02] },
+    { "start": 32.06, "end": 33.26, "lead": [["PRIMERO", 32.06]], "key": ["APRUEBAS UNO", 32.5] },
+    { "start": 34.06, "end": 34.94, "lead": [["DÉJAME", 34.06]], "key": ["TU MARCA", 34.48] },
+    { "start": 34.96, "end": 36.44, "lead": [["Y", 34.96], ["TE", 35.06], ["ENVÍO", 35.14]], "key": ["6 ÁNGULOS", 35.42], "tail": [["NUEVOS", 36.12]] },
+    { "start": 36.46, "end": 37.62, "lead": [["QUE", 36.46], ["PODRÍAMOS", 36.64]], "key": ["TRABAJAR", 37.08] }
+  ]
+}

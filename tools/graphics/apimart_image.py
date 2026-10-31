@@ -72,7 +72,7 @@ class ApimartImage(BaseTool):
 
     dependencies = ["env:APIMART_API_KEY"]
     install_instructions = apimart_client.INSTALL_INSTRUCTIONS
-    agent_skills = ["apimart", "flux-best-practices"]
+    agent_skills = ["apimart", "flux-best-practices", "ugc-avatar-realism"]
 
     capabilities = ["generate_image", "text_to_image", "image_edit"]
     supports = {

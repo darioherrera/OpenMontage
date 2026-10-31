@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Optimy — Andrómeda B-roll</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-400.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-600.woff2") format("woff2");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-700.woff2") format("woff2");
+        font-weight: 700;
+      }
+      :root {
+        --navy: #0a1e30;
+        --blue: #1d4ed8;
+        --blue-hi: #4a8cff;
+        --ink: #f6f8fa;
+        --muted: #8a94a0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--navy);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        color: var(--ink);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--navy);
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ---------- background ---------- */
+      .glow {
+        position: absolute;
+        left: 90px;
+        top: 420px;
+        width: 900px;
+        height: 1100px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(29, 78, 216, 0.42), rgba(29, 78, 216, 0) 100%);
+      }
+      .grid {
+        position: absolute;
+        left: 0;
+        top: -120px;
+        width: 1080px;
+        height: 2160px;
+        background-image:
+          linear-gradient(rgba(74, 140, 255, 0.1) 2px, transparent 2px),
+          linear-gradient(90deg, rgba(74, 140, 255, 0.1) 2px, transparent 2px);
+        background-size: 120px 120px;
+        -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 52%, #000 30%, transparent 100%);
+        mask-image: radial-gradient(ellipse 70% 55% at 50% 52%, #000 30%, transparent 100%);
+      }
+
+      /* ---------- shared type ---------- */
+      .headline {
+        position: absolute;
+        left: 80px;
+        right: 80px;
+        top: 250px;
+        font-weight: 700;
+        font-size: 104px;
+        line-height: 1.06;
+        letter-spacing: -0.03em;
+      }
+      .hl-line {
+        display: block;
+        overflow: hidden;
+        padding-bottom: 8px;
+      }
+      .hl-in {
+        display: block;
+      }
+      .kw-blue {
+        color: var(--blue-hi);
+        display: inline-block;
+        transform-origin: left center;
+      }
+      .label {
+        font-weight: 600;
+        font-size: 32px;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+      .pill {
+        position: absolute;
+        padding: 10px 22px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 30px;
+        white-space: nowrap;
+      }
+      .thumb {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 18px;
+        background: #13304a;
+      }
+      .thumb img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* ---------- beat 1: wall ---------- */
+      .wall-region {
+        position: absolute;
+        left: 0;
+        top: 540px;
+        width: 1080px;
+        height: 960px;
+        -webkit-mask-image: radial-gradient(ellipse 62% 56% at 50% 50%, #000 55%, transparent 100%);
+        mask-image: radial-gradient(ellipse 62% 56% at 50% 50%, #000 55%, transparent 100%);
+      }
+      .wall {
+        position: absolute;
+        left: 540px;
+        top: 480px;
+        width: 0;
+        height: 0;
+      }
+      .wcard {
+        position: absolute;
+        left: -110px;
+        top: -147px;
+        width: 220px;
+        height: 294px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 3px solid rgba(74, 140, 255, 0.35);
+        background: #13304a;
+      }
+      .wcard img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .wcard.keep {
+        z-index: 2;
+        border-color: var(--blue-hi);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      }
+      .b1-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1400px;
+        text-align: center;
+        font-size: 38px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      /* ---------- beat 2: merge (stack x1.6, columns centred on 344 / 884) ---------- */
+      .grp-label {
+        position: absolute;
+        top: 490px;
+        width: 400px;
+        text-align: center;
+        font-size: 40px;
+      }
+      .divider {
+        position: absolute;
+        left: 688px;
+        top: 580px;
+        width: 3px;
+        height: 860px;
+        background: rgba(138, 148, 160, 0.35);
+      }
+      .sim-wrap {
+        position: absolute;
+        left: 344px;
+        top: 1012px;
+        width: 0;
+        height: 0;
+      }
+      .sim {
+        left: -192px;
+        top: -256px;
+        width: 384px;
+        height: 512px;
+        border: 4px solid rgba(74, 140, 255, 0.55);
+        border-radius: 24px;
+      }
+      .merged {
+        left: -256px;
+        top: -341px;
+        width: 512px;
+        height: 683px;
+        border: 6px solid var(--blue-hi);
+        border-radius: 28px;
+        box-shadow:
+          -18px 18px 0 -2px rgba(74, 140, 255, 0.35),
+          -36px 36px 0 -4px rgba(74, 140, 255, 0.2),
+          0 30px 70px rgba(0, 0, 0, 0.5);
+        overflow: visible;
+        z-index: 3;
+      }
+      .merged img {
+        border-radius: 22px;
+      }
+      .merged .pill {
+        left: 50%;
+        bottom: -38px;
+        margin-left: -100px;
+        width: 200px;
+        font-size: 48px;
+        padding: 8px 0;
+        text-align: center;
+      }
+      .diff {
+        left: 744px;
+        width: 280px;
+        height: 373px;
+        border: 4px solid rgba(246, 248, 250, 0.5);
+        border-radius: 22px;
+        overflow: visible;
+      }
+      .diff img {
+        border-radius: 18px;
+      }
+      .diff .pill {
+        right: -24px;
+        top: -24px;
+        width: 80px;
+        padding: 10px 0;
+        font-size: 38px;
+        text-align: center;
+      }
+
+      /* ---------- PiP ---------- */
+      .pip {
+        position: absolute;
+        left: 700px;
+        top: 1540px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 5px solid var(--blue-hi);
+        box-shadow: 0 0 0 10px rgba(29, 78, 216, 0.28), 0 24px 60px rgba(0, 0, 0, 0.5);
+        background: #13304a;
+        z-index: 20;
+      }
+      .pip video {
+        position: absolute;
+        /* face centre in source ≈ 48.6% / 36.7%; scaled so the head fills the circle, face centred (slightly high to keep the chin) */
+        left: -112px;
+        top: -220px;
+        width: 560px;
+        height: 996px;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080" data-height="1920">
+      <!-- background -->
+      <div id="bg" class="clip" data-start="0" data-duration="6" data-track-index="0">
+        <div class="glow" id="glow"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <!-- BEAT 1 — Andrómeda elige entre millones -->
+      <section id="beat1" class="clip" data-start="0" data-duration="3.667" data-track-index="1">
+        <div class="layer" id="b1">
+          <div class="wall-region"><div class="wall" id="wall"></div></div>
+          <div class="headline">
+            <span class="hl-line"><span class="hl-in" id="b1-l1">Andrómeda elige</span></span>
+            <span class="hl-line"><span class="hl-in" id="b1-l2">entre <span class="kw-blue" id="b1-kw">millones</span></span></span>
+          </div>
+          <div class="b1-label" id="b1-label">1 persona <span class="kw-blue">→</span> unos pocos anuncios</div>
+        </div>
+      </section>
+
+      <!-- BEAT 2 — Parecidos = 1 (ends the piece, final hold) -->
+      <section id="beat2" class="clip" data-start="3.6" data-duration="2.4" data-track-index="2">
+        <div class="layer" id="b2">
+          <div class="headline">
+            <span class="hl-line"><span class="hl-in" id="b2-l1">Parecidos <span class="kw-blue" id="b2-kw">= 1</span></span></span>
+          </div>
+          <div class="label grp-label" id="lbl-sim" style="left: 144px">4 variantes</div>
+          <div class="label grp-label" id="lbl-diff" style="left: 684px">Distintos</div>
+          <div class="divider" id="divider"></div>
+          <div class="sim-wrap">
+            <div class="thumb sim" id="sim0"><img src="assets/cards/testimonio.webp" alt="" /></div>
+            <div class="thumb sim" id="sim1"><img src="assets/cards/testimonio.webp" alt="" style="filter: hue-rotate(14deg) brightness(1.08); transform: scale(1.08)" /></div>
+            <div class="thumb sim" id="sim2"><img src="assets/cards/testimonio.webp" alt="" style="filter: saturate(0.75); object-position: 40% 50%; transform: scale(1.14)" /></div>
+            <div class="thumb sim" id="sim3"><img src="assets/cards/testimonio.webp" alt="" style="filter: brightness(0.9) hue-rotate(-12deg); object-position: 60% 40%; transform: scale(1.1)" /></div>
+            <div class="thumb merged" id="merged">
+              <img src="assets/cards/testimonio.webp" alt="" />
+              <div class="pill" id="merged-pill">≈ 1</div>
+            </div>
+          </div>
+          <div class="thumb diff" id="diff0" style="top: 614px">
+            <img src="assets/cards/flatlay.webp" alt="" />
+            <div class="pill diff-pill">1</div>
+          </div>
+          <div class="thumb diff" id="diff1" style="top: 1037px">
+            <img src="assets/cards/unboxing.webp" alt="" />
+            <div class="pill diff-pill">1</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PiP narrator: jump cut at 3.667 (media 0.04–3.707, then 4.07–6.403), video and audio cut identically -->
+      <div class="pip" id="pip">
+        <video id="vo-video-a" class="clip" src="assets/clip2b_andromeda_vo.mp4" data-start="0" data-duration="3.667" data-media-start="0.04" data-track-index="5" muted playsinline></video>
+        <video id="vo-video-b" class="clip" src="assets/clip2b_andromeda_vo.mp4" data-start="3.667" data-duration="2.333" data-media-start="4.07" data-track-index="5" muted playsinline></video>
+      </div>
+      <audio id="vo-audio-a" src="assets/clip2b_andromeda_vo.mp4" data-start="0" data-duration="3.667" data-media-start="0.04" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-audio-b" src="assets/clip2b_andromeda_vo.mp4" data-start="3.667" data-duration="2.333" data-media-start="4.07" data-track-index="10" data-volume="1"></audio>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const prand = (n) => {
+        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+
+      // ---------- background ambience ----------
+      tl.fromTo("#glow", { scale: 1, opacity: 0.8 }, { scale: 1.12, opacity: 1, duration: 3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      tl.fromTo("#grid", { y: 0 }, { y: -72, duration: 6, ease: "none" }, 0);
+
+      // ---------- BEAT 1: wall of ads collapses to a few ----------
+      const CARDS = ["antes-y-despues", "b-roll-cinematografico", "demostracion", "estadistica", "flatlay", "fundador", "nosotros-contra-ellos", "portavoz", "resena", "selfie-ugc", "testimonio", "try-on", "unboxing"];
+      const COLS = 11, ROWS = 11, PITCH_X = 98, PITCH_Y = 128, CARD_SCALE = 0.4;
+      const KEEP = { "4,4": [-122, -160, "selfie-ugc"], "4,6": [122, -160, "estadistica"], "6,4": [-122, 160, "try-on"], "6,6": [122, 160, "resena"] };
+      const wall = document.getElementById("wall");
+      const maxD = Math.hypot(5 * PITCH_X, 5 * PITCH_Y);
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const i = r * COLS + c;
+          const el = document.createElement("div");
+          el.className = "wcard";
+          const img = document.createElement("img");
+          img.alt = "";
+          el.appendChild(img);
+          wall.appendChild(el);
+          const x = (c - 5) * PITCH_X;
+          const y = (r - 5) * PITCH_Y;
+          const slot = KEEP[`${r},${c}`];
+          img.src = `assets/cards/${slot ? slot[2] : CARDS[Math.floor(prand(i * 9 + 5) * CARDS.length)]}.webp`;
+          if (slot) {
+            el.classList.add("keep");
+            // "elige": survivors lift out of the wall before the collapse
+            tl.fromTo(el, { x, y, scale: CARD_SCALE }, { scale: 0.52, duration: 0.4, ease: "back.out(1.8)" }, 1.5);
+            tl.fromTo(el, { x, y, scale: 0.52 }, { x: slot[0], y: slot[1], scale: 0.96, duration: 0.8, ease: "power3.out", immediateRender: false }, 2.5);
+          } else {
+            // center-outward-expansion in reverse: outer ring is pulled in first
+            const d = Math.hypot(x, y) / maxD;
+            const at = 1.25 + (1 - Math.min(1, d)) * 0.95 + prand(i) * 0.12;
+            tl.fromTo(el, { x, y, scale: CARD_SCALE, opacity: 1 }, { x: x * 0.08, y: y * 0.08, scale: 0.06, opacity: 0, duration: 0.7, ease: "power2.in" }, at);
+          }
+        }
+      }
+      tl.fromTo("#wall", { scale: 1.55 }, { scale: 1, duration: 1.7, ease: "power2.out" }, 0);
+      tl.fromTo("#b1-l1", { yPercent: 105 }, { yPercent: 0, duration: 0.55, ease: "power3.out" }, 0.62);
+      tl.fromTo("#b1-l2", { yPercent: 105 }, { yPercent: 0, duration: 0.55, ease: "power3.out" }, 1.75);
+      tl.fromTo("#b1-label", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(1.6)" }, 2.85);
+      tl.fromTo("#b1-kw", { scale: 1 }, { scale: 1.12, duration: 0.2, ease: "power2.out", yoyo: true, repeat: 1 }, 2.9);
+      tl.fromTo("#b1", { opacity: 1 }, { opacity: 0, duration: 0.22, ease: "power1.in" }, 3.38);
+      tl.set("#b1", { opacity: 0 }, 3.6);
+
+      // ---------- BEAT 2: similar ads merge into one, then hold ----------
+      const B2 = 3.62;
+      tl.fromTo("#b2-l1", { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: "power3.out" }, B2);
+      tl.fromTo("#divider", { scaleY: 0 }, { scaleY: 1, duration: 0.45, ease: "power2.out" }, B2);
+      tl.fromTo(["#lbl-sim", "#lbl-diff"], { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", stagger: 0.08 }, B2 + 0.05);
+      tl.fromTo(".diff", { x: 140, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "expo.out", stagger: 0.08 }, B2 + 0.08);
+      const SPREAD = [[-120, -140, -6], [-44, 110, -3], [44, -120, 3], [120, 130, 6]];
+      SPREAD.forEach(([x, y, rot], i) => {
+        tl.fromTo(`#sim${i}`, { x, y: y + 90, rotation: rot, opacity: 0 }, { y, opacity: 1, duration: 0.4, ease: "power3.out" }, B2 + i * 0.05);
+        // slide together (overlap stack), then scale-swap into the merged card
+        tl.fromTo(`#sim${i}`, { x, y, rotation: rot }, { x: (i - 1.5) * 24, y: (i - 1.5) * -18, rotation: (i - 1.5) * 2, duration: 0.65, ease: "power3.inOut", immediateRender: false }, 4.1);
+        tl.fromTo(`#sim${i}`, { scale: 1, opacity: 1 }, { scale: 0.7, opacity: 0, duration: 0.28, ease: "power2.in", immediateRender: false }, 4.9);
+      });
+      tl.fromTo("#merged", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)" }, 5.02);
+      tl.fromTo("#merged-pill", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.38, ease: "back.out(2)" }, 5.25);
+      tl.fromTo(".diff-pill", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: "back.out(2)", stagger: 0.05 }, 5.3);
+      tl.fromTo("#b2-kw", { scale: 1 }, { scale: 1.2, duration: 0.16, ease: "power2.out", yoyo: true, repeat: 1 }, 5.35);
+      // ponytail: everything settles by 5.67 — clean hold to 6.0, no exit animation
+
+      // PiP ring breathes on the keywords
+      [0.78, 4.42].forEach((at) => {
+        tl.fromTo("#pip", { scale: 1 }, { scale: 1.05, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1, immediateRender: false }, at);
+      });
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

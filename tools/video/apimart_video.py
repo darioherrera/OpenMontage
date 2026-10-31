@@ -160,7 +160,7 @@ class ApimartVideo(BaseTool):
 
     dependencies = ["env:APIMART_API_KEY"]
     install_instructions = apimart_client.INSTALL_INSTRUCTIONS
-    agent_skills = ["apimart", "ai-video-gen", "seedance-2-0", "gemini-omni"]
+    agent_skills = ["apimart", "ai-video-gen", "seedance-2-0", "gemini-omni", "ugc-avatar-realism"]
 
     capabilities = list(_OPERATIONS)
     supports = {
